@@ -2,19 +2,16 @@ module Kui exposing
     ( Border
     , Color
     , Direction(..)
-    , Element(..)
+    , Element
     , HAlignment(..)
     , Length(..)
     , Padding
-    , Primitive(..)
-    , Rectangle
     , VAlignment(..)
     , Wrap(..)
     , addHAlignment
     , addLength
     , addPadding
     , addVAlignment
-    , align
     , alignBottom
     , alignLeft
     , alignRight
@@ -22,20 +19,15 @@ module Kui exposing
     , attribute
     , attributes
     , background
-    , behind
     , border
     , center
     , centerX
     , centerY
     , column
-    , empty
-    , emptyRectangle
-    , inFront
-    , isPurePrimitive
     , isZeroLength
     , layout
-    , layoutPrimitive
     , noPadding
+    , none
     , pad
     , padBottom
     , padBottomPct
@@ -45,7 +37,6 @@ module Kui exposing
     , padRightPct
     , padTop
     , padTopPct
-    , primitive
     , renderLength
     , rgb
     , rgb255
@@ -184,25 +175,42 @@ renderLength =
 
 
 type alias Padding =
-    { left : Length
-    , top : Length
+    { top : Length
     , right : Length
     , bottom : Length
+    , left : Length
     }
 
 
 noPadding : Padding
 noPadding =
-    { left = zeroLength, top = zeroLength, right = zeroLength, bottom = zeroLength }
+    { top = zeroLength, right = zeroLength, bottom = zeroLength, left = zeroLength }
 
 
 addPadding : Padding -> Padding -> Padding
 addPadding p1 p2 =
-    { left = addLength p1.left p2.left
-    , top = addLength p1.top p2.top
+    { top = addLength p1.top p2.top
     , right = addLength p1.right p2.right
     , bottom = addLength p1.bottom p2.bottom
+    , left = addLength p1.left p2.left
     }
+
+
+renderPadding : Padding -> List (Html.Attribute msg)
+renderPadding padding =
+    if padding == noPadding then
+        []
+
+    else
+        [ Html.style "padding" <|
+            renderLength padding.top
+                ++ " "
+                ++ renderLength padding.right
+                ++ " "
+                ++ renderLength padding.bottom
+                ++ " "
+                ++ renderLength padding.left
+        ]
 
 
 
@@ -227,6 +235,66 @@ addHAlignment h1 h2 =
             h1
 
 
+renderHAlignment : Direction -> HAlignment -> List (Html.Attribute msg)
+renderHAlignment dir halign =
+    case dir of
+        Row ->
+            case halign of
+                Left ->
+                    [ Html.style "margin-right" "auto" ]
+
+                HCenter ->
+                    [ Html.style "margin-left" "auto", Html.style "margin-right" "auto" ]
+
+                Right ->
+                    [ Html.style "margin-left" "auto" ]
+
+                HStretch ->
+                    []
+
+        ReverseRow ->
+            case halign of
+                Left ->
+                    [ Html.style "margin-right" "auto" ]
+
+                HCenter ->
+                    [ Html.style "margin-left" "auto", Html.style "margin-right" "auto" ]
+
+                Right ->
+                    [ Html.style "margin-left" "auto" ]
+
+                HStretch ->
+                    []
+
+        Column ->
+            case halign of
+                Left ->
+                    [ Html.style "align-self" "flex-start" ]
+
+                HCenter ->
+                    [ Html.style "align-self" "center" ]
+
+                Right ->
+                    [ Html.style "align-self" "flex-end" ]
+
+                HStretch ->
+                    []
+
+        ReverseColumn ->
+            case halign of
+                Left ->
+                    [ Html.style "align-self" "flex-start" ]
+
+                HCenter ->
+                    [ Html.style "align-self" "center" ]
+
+                Right ->
+                    [ Html.style "align-self" "flex-end" ]
+
+                HStretch ->
+                    []
+
+
 type VAlignment
     = Top
     | VCenter
@@ -244,26 +312,69 @@ addVAlignment v1 v2 =
             v1
 
 
+renderVAlignment : Direction -> VAlignment -> List (Html.Attribute msg)
+renderVAlignment dir valign =
+    case dir of
+        Row ->
+            case valign of
+                Top ->
+                    [ Html.style "align-self" "flex-start" ]
+
+                VCenter ->
+                    [ Html.style "align-self" "center" ]
+
+                Bottom ->
+                    [ Html.style "align-self" "flex-end" ]
+
+                VStretch ->
+                    []
+
+        ReverseRow ->
+            case valign of
+                Top ->
+                    [ Html.style "align-self" "flex-start" ]
+
+                VCenter ->
+                    [ Html.style "align-self" "center" ]
+
+                Bottom ->
+                    [ Html.style "align-self" "flex-end" ]
+
+                VStretch ->
+                    []
+
+        Column ->
+            case valign of
+                Top ->
+                    [ Html.style "margin-bottom" "auto" ]
+
+                VCenter ->
+                    [ Html.style "margin-top" "auto", Html.style "margin-bottom" "auto" ]
+
+                Bottom ->
+                    [ Html.style "margin-top" "auto" ]
+
+                VStretch ->
+                    []
+
+        ReverseColumn ->
+            case valign of
+                Top ->
+                    [ Html.style "margin-bottom" "auto" ]
+
+                VCenter ->
+                    [ Html.style "margin-top" "auto", Html.style "margin-bottom" "auto" ]
+
+                Bottom ->
+                    [ Html.style "margin-top" "auto" ]
+
+                VStretch ->
+                    []
+
+
 
 -------------------------------------------------------------------------------
--- Rectangles
-
-
-type alias Rectangle =
-    { fill : Color
-    , border : Border
-    }
-
-
-emptyRectangle : Rectangle
-emptyRectangle =
-    { fill = rgba 0 0 0 0
-    , border =
-        { radius = zeroLength
-        , width = zeroLength
-        , color = rgba 0 0 0 0
-        }
-    }
+-- Borders
 
 
 type alias Border =
@@ -278,17 +389,13 @@ type alias Border =
 -- Elements
 
 
-type Element msg
-    = Element Padding HAlignment VAlignment (List (Html.Attribute msg)) (Primitive msg)
-
-
-type Primitive msg
-    = Layer Layer (Element msg) (List (Element msg))
-    | Stack Direction Wrap (List (Element msg))
-    | Html ((List (Html.Attribute msg) -> Element msg -> Html.Html msg) -> List (Html.Attribute msg) -> Html.Html msg)
-      -- TODO: Are these subsumed by Html?
-    | Rect Rectangle
-    | Text String
+type alias Element msg =
+    Direction
+    -> Padding
+    -> HAlignment
+    -> VAlignment
+    -> List (Html.Attribute msg)
+    -> Html msg
 
 
 type Layer
@@ -309,73 +416,54 @@ type Wrap
     | ReverseWrap
 
 
-primitive : Primitive msg -> Element msg
-primitive =
-    Element noPadding HStretch VStretch []
-
-
-isPurePrimitive : Element msg -> Maybe (Primitive msg)
-isPurePrimitive (Element p h v attrs prim) =
-    if p == noPadding && h == HStretch && v == VStretch && attrs == [] then
-        Just prim
-
-    else
-        Nothing
-
-
 
 -------------------------------------------------------------------------------
 -- User-facing functions
 
 
-empty : Element msg
-empty =
-    Element noPadding HStretch VStretch [] <| Stack Row NoWrap []
-
-
-align : HAlignment -> VAlignment -> Element msg -> Element msg
-align h1 v1 (Element p2 h2 v2 as1 e2) =
-    Element p2 (addHAlignment h1 h2) (addVAlignment v1 v2) as1 e2
-
-
-alignLeft : Element msg -> Element msg
-alignLeft =
-    align Left VStretch
+none : Element msg
+none =
+    stack Row NoWrap [ \_ _ _ _ _ -> Html.div [] [] ]
 
 
 alignTop : Element msg -> Element msg
-alignTop =
-    align HStretch Top
+alignTop inner dir padding halign valign =
+    inner dir padding halign (addVAlignment valign Top)
 
 
 alignRight : Element msg -> Element msg
-alignRight =
-    align Right VStretch
+alignRight inner dir padding halign =
+    inner dir padding (addHAlignment halign Right)
 
 
 alignBottom : Element msg -> Element msg
-alignBottom =
-    align HStretch Bottom
+alignBottom inner dir padding halign valign =
+    inner dir padding halign (addVAlignment valign Bottom)
+
+
+alignLeft : Element msg -> Element msg
+alignLeft inner dir padding halign =
+    inner dir padding (addHAlignment halign Left)
 
 
 centerX : Element msg -> Element msg
-centerX =
-    align HCenter VStretch
+centerX inner dir padding halign =
+    inner dir padding (addHAlignment halign HCenter)
 
 
 centerY : Element msg -> Element msg
-centerY =
-    align HStretch VCenter
+centerY inner dir padding halign valign =
+    inner dir padding halign (addVAlignment valign VCenter)
 
 
 center : Element msg -> Element msg
 center =
-    align HCenter VCenter
+    centerX >> centerY
 
 
 pad : Padding -> Element msg -> Element msg
-pad p1 (Element p2 h2 v2 as1 e2) =
-    Element (addPadding p1 p2) h2 v2 as1 e2
+pad p inner dir padding =
+    inner dir (addPadding padding p)
 
 
 padLeft : Float -> Element msg -> Element msg
@@ -418,77 +506,8 @@ padBottomPct x =
     pad { noPadding | bottom = Percent x }
 
 
-behind : Element msg -> List (Element msg) -> Element msg
-behind e es =
-    primitive <| Layer Behind e es
-
-
-inFront : Element msg -> List (Element msg) -> Element msg
-inFront e es =
-    primitive <| Layer InFront e es
-
-
 stack : Direction -> Wrap -> List (Element msg) -> Element msg
-stack d w es =
-    case es of
-        [ e ] ->
-            e
-
-        _ ->
-            primitive <| Stack d w es
-
-
-row : List (Element msg) -> Element msg
-row =
-    stack Row NoWrap
-
-
-wrappedRow : List (Element msg) -> Element msg
-wrappedRow =
-    stack Row Wrap
-
-
-column : List (Element msg) -> Element msg
-column =
-    stack Column NoWrap
-
-
-attribute : Html.Attribute msg -> Element msg -> Element msg
-attribute a (Element p h v as_ e) =
-    Element p h v (a :: as_) e
-
-
-attributes : List (Html.Attribute msg) -> Element msg -> Element msg
-attributes as1 (Element p h v as2 e) =
-    Element p h v (as1 ++ as2) e
-
-
-
--- TODO: Can these be done with HTML attributes?
-
-
-background : Color -> Element msg -> Element msg
-background color e =
-    behind e [ primitive <| Rect { emptyRectangle | fill = color } ]
-
-
-border : Border -> Element msg -> Element msg
-border b e =
-    behind e [ primitive <| Rect { emptyRectangle | border = b } ]
-
-
-text : String -> Element msg
-text =
-    primitive << Text
-
-
-
--------------------------------------------------------------------------------
--- Rendering
-
-
-flexDiv : Direction -> Wrap -> List (Html.Attribute msg) -> List (Html msg) -> Html msg
-flexDiv dir wrap attrs =
+stack dir wrap es outerDir padding halign valign attribs =
     let
         dirStr =
             case dir of
@@ -519,215 +538,187 @@ flexDiv dir wrap attrs =
         (Html.style "display" "flex"
             :: Html.style "flex-flow" (dirStr ++ " " ++ wrapStr)
             :: Html.style "align-items" "stretch"
-            :: attrs
+            :: Html.style "flex" "1 0 auto"
+            :: renderPadding padding
+            ++ renderHAlignment outerDir halign
+            ++ renderVAlignment outerDir valign
+            ++ attribs
         )
+    <|
+        List.map (\e -> e dir noPadding HStretch VStretch []) es
 
 
-layout : List (Html.Attribute msg) -> Element msg -> Html msg
-layout attrs el =
-    flexDiv Row
+row : List (Element msg) -> Element msg
+row =
+    stack Row NoWrap
+
+
+wrappedRow : List (Element msg) -> Element msg
+wrappedRow =
+    stack Row Wrap
+
+
+column : List (Element msg) -> Element msg
+column =
+    stack Column NoWrap
+
+
+applyPadding : Element msg -> Element msg
+applyPadding inner dir padding =
+    if padding == noPadding then
+        inner dir padding
+
+    else
+        stack Row NoWrap [ inner ] dir padding
+
+
+background : Color -> Element msg -> Element msg
+background color =
+    attribute (Html.style "background-color" <| renderColor color)
+        >> applyPadding
+
+
+border : Border -> Element msg -> Element msg
+border b =
+    if isZeroLength b.width then
+        identity
+
+    else
+        attributes
+            [ Html.style "border-radius" <| renderLength b.radius
+            , Html.style "border-width" <| renderLength b.width
+            , Html.style "border" <| "solid " ++ renderColor b.color
+            ]
+            >> applyPadding
+
+
+attribute : Html.Attribute msg -> Element msg -> Element msg
+attribute attrib =
+    attributes [ attrib ]
+
+
+attributes : List (Html.Attribute msg) -> Element msg -> Element msg
+attributes attribs inner dir padding halign valign outerAttribs =
+    inner dir padding halign valign <| outerAttribs ++ attribs
+
+
+text : String -> Element msg
+text s =
+    stack Row
         NoWrap
-        attrs
-        [ layoutFlexItem Row [] el
+        [ \_ _ _ _ _ -> Html.text s
         ]
 
 
-layoutFlexItem : Direction -> List (Html.Attribute msg) -> Element msg -> Html msg
-layoutFlexItem dir attrs (Element padding halign valign elAttrs prim) =
-    let
-        halignAttrs =
-            case dir of
-                Row ->
-                    case halign of
-                        Left ->
-                            [ Html.style "margin-right" "auto" ]
 
-                        HCenter ->
-                            [ Html.style "margin-left" "auto", Html.style "margin-right" "auto" ]
-
-                        Right ->
-                            [ Html.style "margin-left" "auto" ]
-
-                        HStretch ->
-                            []
-
-                ReverseRow ->
-                    case halign of
-                        Left ->
-                            [ Html.style "margin-right" "auto" ]
-
-                        HCenter ->
-                            [ Html.style "margin-left" "auto", Html.style "margin-right" "auto" ]
-
-                        Right ->
-                            [ Html.style "margin-left" "auto" ]
-
-                        HStretch ->
-                            []
-
-                Column ->
-                    case halign of
-                        Left ->
-                            [ Html.style "align-self" "flex-start" ]
-
-                        HCenter ->
-                            [ Html.style "align-self" "center" ]
-
-                        Right ->
-                            [ Html.style "align-self" "flex-end" ]
-
-                        HStretch ->
-                            []
-
-                ReverseColumn ->
-                    case halign of
-                        Left ->
-                            [ Html.style "align-self" "flex-start" ]
-
-                        HCenter ->
-                            [ Html.style "align-self" "center" ]
-
-                        Right ->
-                            [ Html.style "align-self" "flex-end" ]
-
-                        HStretch ->
-                            []
-
-        valignAttrs =
-            case dir of
-                Row ->
-                    case valign of
-                        Top ->
-                            [ Html.style "align-self" "flex-start" ]
-
-                        VCenter ->
-                            [ Html.style "align-self" "center" ]
-
-                        Bottom ->
-                            [ Html.style "align-self" "flex-end" ]
-
-                        VStretch ->
-                            []
-
-                ReverseRow ->
-                    case valign of
-                        Top ->
-                            [ Html.style "align-self" "flex-start" ]
-
-                        VCenter ->
-                            [ Html.style "align-self" "center" ]
-
-                        Bottom ->
-                            [ Html.style "align-self" "flex-end" ]
-
-                        VStretch ->
-                            []
-
-                Column ->
-                    case valign of
-                        Top ->
-                            [ Html.style "margin-bottom" "auto" ]
-
-                        VCenter ->
-                            [ Html.style "margin-top" "auto", Html.style "margin-bottom" "auto" ]
-
-                        Bottom ->
-                            [ Html.style "margin-top" "auto" ]
-
-                        VStretch ->
-                            []
-
-                ReverseColumn ->
-                    case valign of
-                        Top ->
-                            [ Html.style "margin-bottom" "auto" ]
-
-                        VCenter ->
-                            [ Html.style "margin-top" "auto", Html.style "margin-bottom" "auto" ]
-
-                        Bottom ->
-                            [ Html.style "margin-top" "auto" ]
-
-                        VStretch ->
-                            []
-    in
-    layoutPrimitive dir (Html.style "flex" "1 0 auto" :: halignAttrs ++ valignAttrs ++ elAttrs ++ attrs) prim
+-------------------------------------------------------------------------------
+-- Rendering
 
 
-layoutPrimitive : Direction -> List (Html.Attribute msg) -> Primitive msg -> Html msg
-layoutPrimitive dir attrs prim =
-    let
-        divAttrs e =
-            case attrs of
-                [] ->
-                    e
+layout : List (Html.Attribute msg) -> Element msg -> Html msg
+layout attribs el =
+    row [ el ] Row noPadding HStretch VStretch attribs
 
-                _ ->
-                    Html.div attrs [ e ]
-    in
-    case prim of
-        Layer layer element es ->
-            flexDiv Row NoWrap (Html.style "position" "relative" :: attrs) <|
-                let
-                    es_ =
-                        List.map
-                            (\e ->
-                                layout
-                                    [ Html.style "position" "absolute"
-                                    , Html.style "left" "0px"
-                                    , Html.style "top" "0px"
-                                    , Html.style "width" "100%"
-                                    , Html.style "height" "100%"
-                                    ]
-                                    e
-                            )
-                            es
 
-                    element_ =
-                        layout
-                            [ Html.style "z-index" <|
-                                case layer of
-                                    Behind ->
-                                        "1"
 
-                                    InFront ->
-                                        "-1"
-                            , Html.style "left" "0px"
-                            , Html.style "top" "0px"
-                            , Html.style "width" "100%"
-                            , Html.style "height" "100%"
-                            ]
-                            element
-                in
-                element_ :: es_
+{-
 
-        Stack dir_ wrap children ->
-            flexDiv dir_
-                wrap
-                attrs
-                (List.map (layoutFlexItem dir_ []) children)
 
-        Html f ->
-            f layout attrs
+   behind : Element msg -> List (Element msg) -> Element msg
+   behind e es =
+       Layer Behind e es
 
-        Rect rect ->
-            let
-                fillCss =
-                    [ Html.style "background-color" <| renderColor rect.fill ]
 
-                borderCss =
-                    if isZeroLength rect.border.width then
-                        []
+   inFront : Element msg -> List (Element msg) -> Element msg
+   inFront e es =
+       Layer InFront e es
 
-                    else
-                        [ Html.style "border-radius" (renderLength rect.border.radius), Html.style "border-width" (renderLength rect.border.width), Html.style "border-color" (renderColor rect.border.color) ]
-            in
-            Html.div
-                (fillCss
-                    ++ borderCss
-                    ++ attrs
-                )
-                []
 
-        Text t ->
-            divAttrs <| Html.text t
+   border : Border -> Element msg -> Element msg
+   border b e =
+       behind e [ Rect { emptyRectangle | border = b } ]
+
+
+   text : String -> Element msg
+   text =
+       Text
+
+
+   layoutPrimitive : Direction -> List (Html.Attribute msg) -> Primitive msg -> Html msg
+   layoutPrimitive dir attrs prim =
+       let
+           divAttrs e =
+               case attrs of
+                   [] ->
+                       e
+
+                   _ ->
+                       Html.div attrs [ e ]
+       in
+       case prim of
+           Layer layer element es ->
+               flexDiv Row NoWrap (Html.style "position" "relative" :: attrs) <|
+                   let
+                       es_ =
+                           List.map
+                               (\e ->
+                                   layout
+                                       [ Html.style "position" "absolute"
+                                       , Html.style "left" "0px"
+                                       , Html.style "top" "0px"
+                                       , Html.style "width" "100%"
+                                       , Html.style "height" "100%"
+                                       ]
+                                       e
+                               )
+                               es
+
+                       element_ =
+                           layout
+                               [ Html.style "z-index" <|
+                                   case layer of
+                                       Behind ->
+                                           "1"
+
+                                       InFront ->
+                                           "-1"
+                               , Html.style "left" "0px"
+                               , Html.style "top" "0px"
+                               , Html.style "width" "100%"
+                               , Html.style "height" "100%"
+                               ]
+                               element
+                   in
+                   element_ :: es_
+
+           Stack dir_ wrap children ->
+               flexDiv dir_
+                   wrap
+                   attrs
+                   (List.map (layoutFlexItem dir_ []) children)
+
+           Html f ->
+               f layout attrs
+
+           Rect rect ->
+               let
+                   fillCss =
+                       [ Html.style "background-color" <| renderColor rect.fill ]
+
+                   borderCss =
+                       if isZeroLength rect.border.width then
+                           []
+
+                       else
+                           [ Html.style "border-radius" (renderLength rect.border.radius), Html.style "border-width" (renderLength rect.border.width), Html.style "border-color" (renderColor rect.border.color) ]
+               in
+               Html.div
+                   (fillCss
+                       ++ borderCss
+                       ++ attrs
+                   )
+                   []
+
+           Text t ->
+               divAttrs <| Html.text t
+-}

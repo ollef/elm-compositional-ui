@@ -40,12 +40,21 @@ view : Model -> Html Msg
 view model =
     Kui.layout [] <|
         Kui.row
-            [ Kui.background (Kui.rgba 1 0 0 0.5) <| Kui.alignRight <| Kui.text "Hello, compositional world!"
-            , Kui.text "Another item"
-            , Kui.text "Third item"
+            [ Kui.padLeft 10 <| Kui.padRight 10 <| Kui.alignRight <| Kui.background (Kui.rgba 1 0 0 0.5) <| Kui.text "Hello, compositional world!"
+            , Kui.center <| Kui.text "Another item"
+            , Kui.padTop 20 <|
+                Kui.border
+                    { width = Kui.Pixels 3
+                    , color = Kui.rgb 0 0.5 0.5
+                    , radius = Kui.Pixels 2
+                    }
+                <|
+                    Kui.text "Third item"
             , Kui.column
                 [ Kui.text "Column"
                 , Kui.text "With an item"
+                , Kui.text "3"
+                , Kui.text "4"
                 ]
             ]
 
