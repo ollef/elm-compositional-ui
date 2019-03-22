@@ -158,7 +158,7 @@ renderLength =
                     String.fromFloat p ++ "px"
 
                 Percent p ->
-                    String.fromFloat p ++ "pct"
+                    String.fromFloat p ++ "%"
 
                 Add l1 l2 ->
                     let
