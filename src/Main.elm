@@ -39,22 +39,55 @@ update msg model =
 view : Model -> Html Msg
 view model =
     Kui.layout [] <|
-        Kui.row
-            [ Kui.padLeftPct 10 <| Kui.padLeft 10 <| Kui.padRight 10 <| Kui.alignRight <| Kui.background (Kui.rgba 1 0 0 0.5) <| Kui.text "Hello, compositional world!"
-            , Kui.center <| Kui.text "Another item"
-            , Kui.padTop 20 <|
-                Kui.border
-                    { width = Kui.Pixels 3
-                    , color = Kui.rgb 0 0.5 0.5
-                    , radius = Kui.Pixels 2
-                    }
-                <|
-                    Kui.text "Third item"
-            , Kui.column
-                [ Kui.text "Column"
-                , Kui.text "With an item"
-                , Kui.text "3"
-                , Kui.text "4"
+        Kui.column
+            [ Kui.row
+                [ Kui.padLeftPct 10 <|
+                    Kui.padLeft 10 <|
+                        Kui.padRight 10 <|
+                            Kui.alignRight <|
+                                Kui.background (Kui.rgba 1 0 0 0.5) <|
+                                    Kui.text "Hello, compositional world!"
+                , Kui.text "Hello2"
+                    |> Kui.padRight 20
+                    |> Kui.alignRight
+                , Kui.center <| Kui.text "Another item"
+                , Kui.text "Third item"
+                    |> Kui.border
+                        { width = Kui.Pixels 3
+                        , color = Kui.rgb 0 0.5 0.5
+                        , radius = Kui.Pixels 2
+                        }
+                    |> Kui.padTop 20
+                , Kui.column
+                    [ Kui.text "Column"
+                    , Kui.text "With an item"
+                    , Kui.text "3"
+                    , Kui.text "4"
+                    ]
+                ]
+            , let
+                border =
+                    Kui.border { width = Kui.Pixels 3, color = Kui.rgb 0 0 0, radius = Kui.Pixels 2 }
+              in
+              Kui.column
+                [ Kui.row <|
+                    List.map (border << Kui.alignTop)
+                        [ Kui.alignLeft <| Kui.text "top left"
+                        , Kui.centerX <| Kui.text "top"
+                        , Kui.alignRight <| Kui.text "top right"
+                        ]
+                , Kui.row <|
+                    List.map (border << Kui.centerY)
+                        [ Kui.alignLeft <| Kui.text "center left"
+                        , Kui.centerX <| Kui.text "center"
+                        , Kui.alignRight <| Kui.text "center right"
+                        ]
+                , Kui.row <|
+                    List.map (border << Kui.alignBottom)
+                        [ Kui.alignLeft <| Kui.text "bottom left"
+                        , Kui.centerX <| Kui.text "bottom"
+                        , Kui.alignRight <| Kui.text "bottom right"
+                        ]
                 ]
             ]
 
