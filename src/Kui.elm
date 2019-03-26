@@ -250,7 +250,7 @@ renderHAlignment dir halign =
                     [ Html.style "margin-left" "auto" ]
 
                 HStretch ->
-                    []
+                    [ Html.style "flex-grow" "1" ]
 
         ReverseRow ->
             case halign of
@@ -264,7 +264,7 @@ renderHAlignment dir halign =
                     [ Html.style "margin-left" "auto" ]
 
                 HStretch ->
-                    []
+                    [ Html.style "flex-grow" "1" ]
 
         Column ->
             case halign of
@@ -355,7 +355,7 @@ renderVAlignment dir valign =
                     [ Html.style "margin-top" "auto" ]
 
                 VStretch ->
-                    []
+                    [ Html.style "flex-grow" "1" ]
 
         ReverseColumn ->
             case valign of
@@ -369,7 +369,7 @@ renderVAlignment dir valign =
                     [ Html.style "margin-top" "auto" ]
 
                 VStretch ->
-                    []
+                    [ Html.style "flex-grow" "1" ]
 
 
 
@@ -538,7 +538,6 @@ stack dir wrap es outerDir padding halign valign attribs =
         (Html.style "display" "flex"
             :: Html.style "flex-flow" (dirStr ++ " " ++ wrapStr)
             :: Html.style "align-items" "stretch"
-            :: Html.style "flex" "1 0 auto"
             :: renderPadding padding
             ++ renderHAlignment outerDir halign
             ++ renderVAlignment outerDir valign
