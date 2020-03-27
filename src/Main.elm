@@ -1,6 +1,7 @@
 module Main exposing (Model, Msg(..), init, main, update, view)
 
 import Browser
+import Color
 import Html exposing (Html, div, h1, img, text)
 import Html.Attributes exposing (src)
 import Kui
@@ -45,7 +46,7 @@ view model =
                     Kui.padLeft 10 <|
                         Kui.padRight 10 <|
                             Kui.alignRight <|
-                                Kui.background (Kui.rgba 1 0 0 0.5) <|
+                                Kui.background (Color.rgba 1 0 0 0.5) <|
                                     Kui.text "Hello, compositional world!"
                 , Kui.text "Hello2"
                     |> Kui.padRight 20
@@ -54,7 +55,7 @@ view model =
                 , Kui.text "Third item"
                     |> Kui.border
                         { width = Kui.Pixels 3
-                        , color = Kui.rgb 0 0.5 0.5
+                        , color = Color.rgb 0 0.5 0.5
                         , radius = Kui.Pixels 2
                         }
                     |> Kui.padTop 20
@@ -67,7 +68,7 @@ view model =
                 ]
             , let
                 border =
-                    Kui.border { width = Kui.Pixels 3, color = Kui.rgb 0 0 0, radius = Kui.Pixels 2 }
+                    Kui.border { width = Kui.Pixels 3, color = Color.rgb 0 0 0, radius = Kui.Pixels 2 }
               in
               Kui.column
                 [ Kui.row <|

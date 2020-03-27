@@ -1,6 +1,5 @@
 module Kui exposing
     ( Border
-    , Color
     , Direction(..)
     , Element
     , HAlignment(..)
@@ -38,10 +37,6 @@ module Kui exposing
     , padTop
     , padTopPct
     , renderLength
-    , rgb
-    , rgb255
-    , rgba
-    , rgba255
     , row
     , stack
     , text
@@ -49,55 +44,9 @@ module Kui exposing
     , zeroLength
     )
 
-import Hex
+import Color exposing (Color)
 import Html exposing (Html)
 import Html.Attributes as Html
-
-
-
--------------------------------------------------------------------------------
--- Color
-
-
-type alias Color =
-    { red : Float, green : Float, blue : Float, alpha : Float }
-
-
-rgba : Float -> Float -> Float -> Float -> Color
-rgba =
-    Color
-
-
-rgb : Float -> Float -> Float -> Color
-rgb r g b =
-    rgba r g b 1
-
-
-rgb255 : Int -> Int -> Int -> Color
-rgb255 r g b =
-    rgba255 r g b 1
-
-
-rgba255 : Int -> Int -> Int -> Float -> Color
-rgba255 r g b =
-    Color (toFloat r / 255) (toFloat g / 255) (toFloat b / 255)
-
-
-renderColor : Color -> String
-renderColor { red, green, blue, alpha } =
-    let
-        go x =
-            String.padLeft 2 '0' <| Hex.toString <| round <| x * 255
-    in
-    "#"
-        ++ String.concat
-            (List.map go <|
-                if alpha == 1 then
-                    [ red, green, blue ]
-
-                else
-                    [ red, green, blue, alpha ]
-            )
 
 
 
@@ -573,7 +522,7 @@ applyPadding inner dir padding =
 
 background : Color -> Element msg -> Element msg
 background color =
-    attribute (Html.style "background-color" <| renderColor color)
+    attribute (Html.style "background-color" <| Color.toCssString color)
         >> applyPadding
 
 
@@ -586,7 +535,7 @@ border b =
         attributes
             [ Html.style "border-radius" <| renderLength b.radius
             , Html.style "border-width" <| renderLength b.width
-            , Html.style "border" <| "solid " ++ renderColor b.color
+            , Html.style "border" <| "solid " ++ Color.toCssString b.color
             ]
             >> applyPadding
 
